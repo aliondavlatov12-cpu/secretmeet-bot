@@ -704,19 +704,69 @@ async def cancel(update,context):
 
 def serve(): web.run(host="0.0.0.0",port=PORT,use_reloader=False)
 
-def main():
-    init_db()
-    threading.Thread(target=serve,daemon=True).start()
-    application=Application.builder().token(TOKEN).build()
-    application.add_handler(CommandHandler("start",start))
-    application.add_handler(CommandHandler("admin",admin))
-    application.add_handler(CommandHandler("cancel",cancel))
+def serve():
+    web.run(host="0.0.0.0", port=PORT, use_reloader=False)
+
+
+async def bot_main():
+    application = Application.builder().token(TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("admin", admin))
+    application.add_handler(CommandHandler("cancel", cancel))
+
     application.add_handler(CallbackQueryHandler(cb))
     application.add_handler(PreCheckoutQueryHandler(precheckout))
-    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT,paid))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,route_text))
-    application.add_handler(MessageHandler((filters.PHOTO|filters.Sticker.ALL|filters.VOICE|filters.VIDEO|filters.Document.ALL|filters.ANIMATION) & ~filters.COMMAND,route_text))
-    log.info("SecretMeet starting")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, paid))
 
-if __name__=="__main__": main()
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, route_text)
+    )
+
+    application.add_handler(
+        MessageHandler(
+            (
+                filters.PHOTO
+                | filters.Sticker.ALL
+                | filters.VOICE
+                | filters.VIDEO
+                | filters.Document.ALL
+                | filters.ANIMATION
+            ) & ~filters.COMMAND,
+            route_text,
+        )
+    )
+
+    log.info("SecretMeet starting")
+
+    await application.initialize()
+    await application.start()
+
+    if application.updater is None:
+        raise RuntimeError("Telegram updater is not available")
+
+    await application.updater.start_polling(
+        allowed_updates=Update.ALL_TYPES
+    )
+
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await application.updater.stop()
+        await application.stop()
+        await application.shutdown()
+
+
+def main():
+    init_db()
+
+    threading.Thread(
+        target=serve,
+        daemon=True
+    ).start()
+
+    asyncio.run(bot_main())
+
+
+if __name__ == "__main__":
+    main()
