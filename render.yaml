@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: secretmeet-bot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    healthCheckPath: /health
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_IDS
+        value: "7659107145"
+      - key: REQUIRED_CHANNEL
+        sync: false
+      - key: PREMIUM_STARS
+        value: "100"
+      - key: PREMIUM_DAYS
+        value: "30"
+      - key: PYTHON_VERSION
+        value: "3.12.7"
