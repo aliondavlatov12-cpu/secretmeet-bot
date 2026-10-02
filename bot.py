@@ -1314,7 +1314,7 @@ async def gender_search_cb(cb: CallbackQuery, state: FSMContext):
         await onboarding(cb.message, state, u or touch(cb.from_user))
         return
     gf = cb.data.split(":", 1)[1]
-    await cb_edit(cb, "🔎 Ҷустуҷӯ оғоз мешавад…")
+    await cb_edit(cb, "🔎 Начинаем поиск собеседника…")
     await start_search(uid, cb.message.chat.id, gf)
 
 
